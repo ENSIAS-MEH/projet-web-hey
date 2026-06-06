@@ -1,0 +1,22 @@
+@startuml
+node "Poste Client (Patient/Médecin)" as Client {
+    artifact "Navigateur Web" as Browser
+}
+
+node "Serveur d'Application" as AppServer {
+    component "Application MediTrack (Java)" as App {
+        package "Couche Présentation" { }
+        package "Couche Métier" { }
+        package "Couche DAO" { }
+    }
+}
+
+node "Serveur de Base de Données" as DBServer {
+    database "MySQL / PostgreSQL" as DB {
+        artifact "Schema meditrack_db"
+    }
+}
+
+Browser <--> App: "HTTP/HTTPS"
+App <--> DB: "JDBC (Port 3306 / 5432)"
+@enduml

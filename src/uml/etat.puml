@@ -1,0 +1,9 @@
+@startuml
+[*] --> PLANIFIE : Le patient réserve
+PLANIFIE --> CONFIRME : Le médecin valide
+PLANIFIE --> ANNULE : Le patient ou le médecin annule
+CONFIRME --> TERMINE : La consultation a eu lieu
+CONFIRME --> ANNULE : Urgence médicale / Annulation tardive
+ANNULE --> [*]
+TERMINE --> [*]
+@enduml

@@ -1,0 +1,323 @@
+package com.meditrack.controllers;
+
+import com.meditrack.dao.*;
+import com.meditrack.models.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpSession;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
+@Controller
+public class WebController {
+
+    private final UserDAO userDAO = new UserDAOImpl();
+    private final VitalsDAO vitalsDAO = new VitalsDAOImpl();
+    private final AppointmentDAO appointmentDAO = new AppointmentDAOImpl();
+    private final AlertDAO alertDAO = new AlertDAOImpl();
+    private final DoctorDAO doctorDAO = new DoctorDAOImpl();
+
+    // =========================================================
+    // PARTIE CONNEXION / DÉCONNEXION
+    // =========================================================
+
+    @GetMapping("/login")
+    public String afficherPageLogin() {
+        return "login";
+    }
+
+    /**
+     * ✅ ÉTAPE 4 : Login avec session + redirection par rôle
+     * Respecte le Diagramme d'Activité : PATIENT → /dashboard, MEDECIN → /doctor/dashboard
+     */
+    @PostMapping("/login")
+    public String traiterConnexion(@RequestParam String email,
+                                   @RequestParam String password,
+                                   HttpSession session,
+                                   Model model) {
+
+        String resultat = userDAO.authentifierEtGetRole(email, password);
+
+        if (resultat != null) {
+            // Format: "PATIENT:3" ou "MEDECIN:1"
+            String[] parts = resultat.split(":");
+            String role = parts[0];
+            int userId = Integer.parseInt(parts[1]);
+
+            // ✅ On stocke l'ID et le rôle dans la session
+            session.setAttribute("userId", userId);
+            session.setAttribute("role", role);
+
+            // ✅ Redirection selon le rôle (Critère du Diagramme d'Activité)
+            if ("MEDECIN".equals(role)) {
+                return "redirect:/doctor/dashboard";
+            } else {
+                return "redirect:/dashboard";
+            }
+        } else {
+            // Critère d'acceptation 1 : message générique, ne révèle pas si c'est email ou mdp
+            model.addAttribute("erreur", "Identifiants incorrects.");
+            return "login";
+        }
+    }
+
+    @GetMapping("/logout")
+    public String seDeconnecter(HttpSession session) {
+        session.invalidate(); // Supprime toutes les données de session
+        return "redirect:/login";
+    }
+
+    // =========================================================
+    // PARTIE INSCRIPTION PATIENT
+    // =========================================================
+
+    @GetMapping("/register")
+    public String afficherPageInscription() {
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String traiterInscription(@RequestParam String role,
+                                     @RequestParam String nom,
+                                     @RequestParam String prenom,
+                                     @RequestParam String email,
+                                     @RequestParam String password,
+                                     @RequestParam(required = false) String sexe,
+                                     @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateNaissance,
+                                     @RequestParam(required = false) String specialite,
+                                     Model model) {
+
+        User nouvelUtilisateur = null;
+
+        // ✅ CAS 1 : Inscription PATIENT
+        if ("PATIENT".equals(role)) {
+            if (sexe == null || sexe.isEmpty() || dateNaissance == null) {
+                model.addAttribute("erreur", "Erreur : Sexe et date de naissance obligatoires pour un patient.");
+                return "register";
+            }
+            nouvelUtilisateur = new Patient(0, email, password, nom, prenom, sexe, dateNaissance);
+        }
+        // ✅ CAS 2 : Inscription MEDECIN
+        else if ("MEDECIN".equals(role)) {
+            if (specialite == null || specialite.isEmpty()) {
+                model.addAttribute("erreur", "Erreur : Spécialité obligatoire pour un médecin.");
+                return "register";
+            }
+            nouvelUtilisateur = new Doctor(0, email, password, nom, prenom, specialite);
+        }
+        // ✅ CAS 3 : Rôle invalide
+        else {
+            model.addAttribute("erreur", "Erreur : Rôle invalide.");
+            return "register";
+        }
+
+        // Vérification que l'utilisateur a bien été créé
+        if (nouvelUtilisateur == null) {
+            model.addAttribute("erreur", "Erreur : Impossible de créer le compte.");
+            return "register";
+        }
+
+        // Créer le compte via le DAO
+        String resultat = userDAO.creerCompte(nouvelUtilisateur);
+
+        if ("SUCCESS".equals(resultat)) {
+            return "redirect:/login";
+        } else {
+            model.addAttribute("erreur", resultat);
+            return "register";
+        }
+    }
+
+    // =========================================================
+    // TABLEAU DE BORD PATIENT
+    // =========================================================
+
+    @GetMapping("/dashboard")
+    public String afficherDashboard(HttpSession session, Model model) {
+        // ✅ Vérification de la session : si pas connecté → retour login
+        Integer patientId = (Integer) session.getAttribute("userId");
+        String role = (String) session.getAttribute("role");
+
+        if (patientId == null || !"PATIENT".equals(role)) {
+            return "redirect:/login";
+        }
+        List<Doctor> listeMedecins = doctorDAO.getAllDoctors();
+        model.addAttribute("listeMedecins", listeMedecins);
+
+        model.addAttribute("historique", vitalsDAO.findByPatient(patientId));
+        model.addAttribute("mesRdv", appointmentDAO.getRendezVousPatient(patientId));
+        // ✅ Passer les alertes concernant ce patient
+        model.addAttribute("alertes", alertDAO.getAlertesPourPatient(patientId));
+        // ✅ Passer la liste complète des médecins disponibles
+        model.addAttribute("medecins", doctorDAO.getAllDoctors());
+        return "dashboard";
+    }
+
+    // =========================================================
+    // CONSTANTES VITALES
+    // =========================================================
+
+    /**
+     * ✅ ÉTAPE 6 : Détection d'alertes pour glycémie ET tension (Critère 4 + exigences)
+     */
+    @PostMapping("/vitals")
+        public String enregistrerConstante(@RequestParam String tension,
+                                        @RequestParam double poids,
+                                        @RequestParam double glycemie,
+                                        HttpSession session,
+                                        Model model) {
+
+            Integer patientId = (Integer) session.getAttribute("userId");
+            if (patientId == null || !"PATIENT".equals(session.getAttribute("role"))) {
+                return "redirect:/login";
+            }
+
+            //Récupérer le nom du patient
+            User patientUser = userDAO.findById(patientId);
+            String patientNomComplet = "Patient ID " + patientId; // fallback
+            if (patientUser instanceof Patient) {
+                Patient p = (Patient) patientUser;
+                patientNomComplet = p.getPrenom() + " " + p.getNom();
+            }
+            final String nomPatient = patientNomComplet;
+
+            Vitals nouvelleMesure = new Vitals(0, new Date(), tension, poids, glycemie, patientId);
+            vitalsDAO.save(nouvelleMesure);
+
+            // 👉 DEBUG
+            List<Integer> doctorIdsList = appointmentDAO.getDoctorIdsForPatient(patientId);
+            System.out.println("DEBUG - patientId : " + patientId);
+            System.out.println("DEBUG - doctorIds : " + doctorIdsList);
+            System.out.println("DEBUG - glycemie : " + glycemie);
+
+            Set<Integer> doctorIds = new HashSet<>(doctorIdsList);
+
+            for (int doctorId : doctorIds) {
+
+                System.out.println("DEBUG - Envoi alerte au docteur ID : " + doctorId);
+
+                if (glycemie > 1.26) {
+                    alertDAO.createAlert(doctorId,
+                                "⚠️ Glycémie critique (" + glycemie + " g/L) pour " + nomPatient, patientId);
+                }
+                try {
+                    String[] parts = tension.split("/");
+                    if (parts.length == 2) {
+                        int systolique = Integer.parseInt(parts[0].trim());
+                        int diastolique = Integer.parseInt(parts[1].trim());
+                        if (systolique > 14 || diastolique > 9) {
+                            alertDAO.createAlert(doctorId,
+                                "⚠️ Tension élevée (" + tension + " cmHg) pour le patient ID " + nomPatient, patientId);
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    // Format invalide, on ignore
+                }
+            }
+
+            model.addAttribute("msgConstantes", "✅ Données enregistrées avec succès !");
+            return afficherDashboard(session, model);
+        }
+
+
+    // =========================================================
+    // RENDEZ-VOUS PATIENT
+    // =========================================================
+
+    @PostMapping("/appointments")
+    public String reserverRendezVous(@RequestParam int doctorId,
+                                     @RequestParam String dateHeure,
+                                     HttpSession session,
+                                     Model model) {
+
+        Integer patientId = (Integer) session.getAttribute("userId");
+        if (patientId == null || !"PATIENT".equals(session.getAttribute("role"))) {
+            return "redirect:/login";
+        }
+
+        Date dateRdv = null;
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+            dateRdv = formatter.parse(dateHeure);
+        } catch (Exception e) {
+            model.addAttribute("msgRdvError", "❌ Format de date invalide.");
+            return afficherDashboard(session, model);
+        }
+
+        boolean estLibre = appointmentDAO.checkDisponibilite(doctorId, dateRdv);
+
+        if (estLibre) {
+            appointmentDAO.saveAppointment(patientId, doctorId, dateRdv, "PLANIFIE");
+            model.addAttribute("msgRdvSuccess", "✅ Réservation confirmée !");
+        } else {
+            model.addAttribute("msgRdvError", "❌ Ce créneau est déjà pris. Choisissez une autre heure.");
+        }
+
+        return afficherDashboard(session, model);
+    }
+
+    // =========================================================
+    // ANNULATION D'UN RENDEZ-VOUS (côté patient)
+    // =========================================================
+
+    @PostMapping("/appointments/cancel")
+    public String annulerRendezVous(@RequestParam int appointmentId,
+                                    HttpSession session,
+                                    Model model) {
+        Integer patientId = (Integer) session.getAttribute("userId");
+        if (patientId == null || !"PATIENT".equals(session.getAttribute("role"))) {
+            return "redirect:/login";
+        }
+        appointmentDAO.updateStatut(appointmentId, "ANNULE");
+        model.addAttribute("msgRdvSuccess", "✅ Rendez-vous annulé.");
+        return afficherDashboard(session, model);
+    }
+
+    // =========================================================
+    // TABLEAU DE BORD MÉDECIN
+    // =========================================================
+
+   @GetMapping("/doctor/dashboard")
+        public String afficherDoctorDashboard(HttpSession session, Model model) {
+            Integer doctorId = (Integer) session.getAttribute("userId");
+            String role = (String) session.getAttribute("role");
+
+            if (doctorId == null || !"MEDECIN".equals(role)) {
+                return "redirect:/login";
+            }
+
+            // ✅ Récupérer les infos du médecin connecté
+            Doctor doctorConnecte = doctorDAO.getDoctorById(doctorId);
+            model.addAttribute("doctorConnecte", doctorConnecte);
+
+            model.addAttribute("alertes", alertDAO.getAlertesNonLues(doctorId));
+            model.addAttribute("mesRdv", appointmentDAO.getRendezVousMedecin(doctorId));
+            return "doctor-dashboard";
+        }
+
+    @PostMapping("/doctor/appointments/update")
+    public String modifierStatutRdv(@RequestParam int appointmentId,
+                                    @RequestParam String statut,
+                                    HttpSession session) {
+        if (!"MEDECIN".equals(session.getAttribute("role"))) {
+            return "redirect:/login";
+        }
+        appointmentDAO.updateStatut(appointmentId, statut);
+        return "redirect:/doctor/dashboard";
+    }
+
+    @PostMapping("/doctor/alerts/read")
+    public String marquerAlerteLue(@RequestParam int alertId, HttpSession session) {
+        if (!"MEDECIN".equals(session.getAttribute("role"))) {
+            return "redirect:/login";
+        }
+        alertDAO.marquerCommeLue(alertId);
+        return "redirect:/doctor/dashboard";
+    }
+}

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTrack - Inscription</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            animation: grainMove 30s linear infinite;
+        }
+        @keyframes grainMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(100px); }
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .register-container::before {
+            content: '🩺';
+            font-size: 3rem;
+            display: block;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .role-selection {
+            margin: 30px 0;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        .role-option {
+            flex: 1;
+            position: relative;
+        }
+        .role-option input[type="radio"] {
+            display: none;
+        }
+        .role-option label {
+            display: block;
+            padding: 20px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.8);
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 16px;
+        }
+        .role-option input[type="radio"]:checked + label {
+            border-color: #f5576c;
+            background: rgba(245, 87, 108, 0.1);
+            color: #f5576c;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.3);
+        }
+        .role-option label:hover {
+            border-color: #f093fb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.2);
+        }
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.8);
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: #f5576c;
+            box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+            outline: none;
+        }
+        .input-group::before {
+            content: attr(data-icon);
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #f5576c;
+            font-size: 18px;
+            pointer-events: none;
+        }
+        .fields-group {
+            margin: 20px 0;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .fields-group.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fields-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        button:hover::before {
+            left: 100%;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 87, 108, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #f5576c;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .link:hover {
+            color: #f093fb;
+            text-decoration: underline;
+            transform: translateY(-1px);
+        }
+        @media (max-width: 600px) {
+            .register-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+            .role-selection {
+                flex-direction: column;
+                gap: 15px;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <h2>Créer un compte MediTrack</h2>
+    
+    <div th:if="${erreur}" class="error" th:text="${erreur}"></div>
+
+    <form action="/register" method="post" id="registerForm">
+        <!-- SÉLECTION DU TYPE DE COMPTE -->
+        <div>
+            <label style="display: block; margin-bottom: 15px; font-weight: 600; color: #333; text-align: center;">Je m'inscris en tant que:</label>
+            <div class="role-selection">
+                <div class="role-option">
+                    <input type="radio" id="patient-role" name="role" value="PATIENT" required onchange="updateForm()">
+                    <label for="patient-role">👤 Patient</label>
+                </div>
+                <div class="role-option">
+                    <input type="radio" id="doctor-role" name="role" value="MEDECIN" required onchange="updateForm()">
+                    <label for="doctor-role">👨‍⚕️ Docteur</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHAMPS COMMUNES -->
+        <div class="input-group" data-icon="📝">
+            <input type="text" name="nom" placeholder="Nom" required>
+        </div>
+        <div class="input-group" data-icon="📝">
+            <input type="text" name="prenom" placeholder="Prénom" required>
+        </div>
+        <div class="input-group" data-icon="📧">
+            <input type="email" name="email" placeholder="Adresse Email" required>
+        </div>
+        <div class="input-group" data-icon="🔒">
+            <input type="password" name="password" placeholder="Mot de passe" required>
+        </div>
+        
+        <!-- CHAMPS POUR PATIENT -->
+        <div id="patient-fields" class="fields-group">
+            <div class="input-group" data-icon="⚧">
+                <select name="sexe" id="sexe" required>
+                    <option value="" disabled selected>Sélectionnez votre sexe</option>
+                    <option value="M">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <label for="dateNaissance">Date de naissance :</label>
+            <div class="input-group" data-icon="📅">
+                <input type="date" id="dateNaissance" name="dateNaissance" required>
+            </div>
+        </div>
+
+        <!-- CHAMPS POUR MEDECIN -->
+        <div id="doctor-fields" class="fields-group">
+            <div class="input-group" data-icon="⚕️">
+                <select name="specialite" id="specialite" required>
+                    <option value="" disabled selected>Sélectionnez votre spécialité</option>
+                    <option value="Médecine Générale">Médecine Générale</option>
+                    <option value="Cardiologie">Cardiologie</option>
+                    <option value="Dermatologie">Dermatologie</option>
+                    <option value="Pédiatrie">Pédiatrie</option>
+                    <option value="Orthopédie">Orthopédie</option>
+                    <option value="Neurologie">Neurologie</option>
+                    <option value="Psychiatrie">Psychiatrie</option>
+                    <option value="Oncologie">Oncologie</option>
+                    <option value="Autre">Autre</option>
+                </select>
+            </div>
+        </div>
+        
+        <button type="submit">S'inscrire</button>
+    </form>
+    
+    <a href="/login" class="link">Déjà un compte ? Se connecter</a>
+</div>
+
+<script>
+function updateForm() {
+    const patientRole = document.getElementById('patient-role').checked;
+    const doctorRole = document.getElementById('doctor-role').checked;
+    const patientFields = document.getElementById('patient-fields');
+    const doctorFields = document.getElementById('doctor-fields');
+    const sexeField = document.getElementById('sexe');
+    const dateField = document.getElementById('dateNaissance');
+    const specialiteField = document.getElementById('specialite');
+
+    if (patientRole) {
+        patientFields.classList.add('active');
+        doctorFields.classList.remove('active');
+        sexeField.required = true;
+        dateField.required = true;
+        specialiteField.required = false;
+    } else if (doctorRole) {
+        patientFields.classList.remove('active');
+        doctorFields.classList.add('active');
+        sexeField.required = false;
+        dateField.required = false;
+        specialiteField.required = true;
+    }
+}
+</script>
+
+</body>
+</html>
