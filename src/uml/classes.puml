@@ -1,0 +1,65 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+' --- Classes Métier ---
+abstract class User {
+    id: int
+    email: String
+    motDePasseHash: String
+    role: String
+}
+
+class Patient extends User {
+    nom: String
+    prenom: String
+    sexe: String
+    - dateNaissance: Date
+}
+
+class Doctor extends User {
+    nom: String
+    prenom: String
+    specialite: String
+}
+
+class Vitals {
+    id: int
+    dateMesure: Date
+    tension: String
+    - poids: double
+    glycemie: double
+}
+
+class Appointment {
+    id: int
+    dateHeure: Date
+    statut: String
+}
+
+class Alert {
+    id: int
+    message: String
+    dateCreation: Date
+    lue: boolean
+}
+
+' --- Interfaces DAO ---
+interface UserDAO <<interface>> {
+    + authentifier(email: String, mdp: String): boolean
+    + findById(id: int): User
+}
+
+interface VitalsDAO <<interface>> {
+    + save(v: Vitals): void
+    + findByPatient(patientId: int): List<Vitals>
+}
+
+' --- Relations ---
+Patient "1" *-- "*" Vitals : possède >
+Patient "1" -- "*" Appointment : prend >
+Doctor "1" -- "*" Appointment : gère >
+Doctor "1" -- "*" Patient : suit >
+Doctor "1" *-- "*" Alert : reçoit >
+Alert "0..1" -- "1" Vitals : déclenche >
+@enduml
