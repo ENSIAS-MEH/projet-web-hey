@@ -1,119 +1,112 @@
-# Rapport du Projet MediTrack
+## 1. Description du projet
+•⁠  ⁠*Objectifs :* Développer une application web robuste permettant aux utilisateurs de gérer, transférer et versionner leurs fichiers de manière totalement sécurisée.
+•⁠  ⁠*Contexte :* Projet académique réalisé dans le cadre de la première année du cycle d'ingénieur (filières INE1 et ICCN) à l'INPT. Il vise à mettre en pratique les concepts avancés de développement full-stack, d'administration système et de cybersécurité.
+•⁠  ⁠*Fonctionnalités principales :*
+  * Authentification et gestion des sessions utilisateurs.
+  * Téléversement, téléchargement et suppression de fichiers.
+  * Suivi et gestion des différentes versions d'un même fichier.
+  * Tableau de bord analytique pour la gestion de l'espace de stockage.
+•⁠  ⁠*Technologies utilisées :* * *Front-end :* React.js, Tailwind CSS.
+  * *Back-end :* Python (Flask).
+  * *Base de données :* PostgreSQL / SQLite.
+  * *Infrastructure :* Linux, Nginx, Docker.
+•⁠  ⁠*Cas d'utilisation :* Un utilisateur s'inscrit, s'authentifie, crée un répertoire de travail, dépose des fichiers sensibles, met à jour un fichier (création d'une version ⁠ v2 ⁠), et gère les droits d'accès.
 
-## Noms et coordonnées des membres de l'équipe
+---
 
-- **Développeur 1 (Backend)** : [Nom], [Email], [Téléphone] - Responsable de l'architecture Spring Boot, logique métier, gestion des sessions et sécurité.
-- **Développeur 2 (Frontend + Base de données)** : [Nom], [Email], [Téléphone] - Responsable du frontend, des templates Thymeleaf et de la gestion de la base de données.
+## 2. Membres du projet
+•⁠  ⁠*NIZAR EL AMRANI* * *Rôles & Responsabilités :* Lead Back-end, Administration Système & Sécurité.
+  * *Contributions principales :* Architecture de l'API Flask, implémentation de l'authentification JWT, configuration du serveur Linux (gestion des ACL, stockage LVM), et sécurisation globale de l'application contre les vulnérabilités courantes.
+•⁠  ⁠*WALID ERRAHOUI*
+  * *Rôles & Responsabilités :* Lead Front-end, Qualité & UI/UX.
+  * *Contributions principales :* Développement de l'interface utilisateur en React, gestion des états dynamiques, validation des formulaires côté client, et conception de l'expérience utilisateur globale.
+•⁠  ⁠*SAID NAAMI*
+  * *Rôles & Responsabilités :* Développeur Full-Stack & Intégration.
+  * *Contributions principales :* Participation au développement des composants React, création d'endpoints Flask pour la gestion des fichiers, et mise en place des tests unitaires.
 
-## Table des matières
+---
 
-1. [Introduction et description du projet](#introduction-et-description-du-projet)
-2. [Instructions d'installation et d'utilisation](#instructions-dinstallation-et-dutilisation)
-3. [Description de l'architecture et des choix de conception](#description-de-larchitecture-et-des-choix-de-conception)
-4. [Difficultés rencontrées et solutions apportées](#difficultés-rencontrées-et-solutions-apportées)
-5. [Conclusion](#conclusion)
+## 3. Architecture
+L'architecture du système repose sur une *séparation stricte des préoccupations* (Decoupled Architecture) :
+•⁠  ⁠*Front-end (Client-Side) :* Développé en React (SPA - Single Page Application). Justification : Permet une navigation fluide sans rechargement de page, une gestion complexe des états (avec Redux ou Context API) et une réactivité optimale pour la gestion des fichiers.
+•⁠  ⁠*Back-end (Server-Side) :* Développé avec Flask (Python). Justification : Flask offre la légèreté nécessaire pour concevoir une API RESTful performante, tout en s'intégrant parfaitement avec les scripts d'administration système Linux et les librairies de sécurité Python.
+•⁠  ⁠*Communication :* Les deux entités communiquent exclusivement via des requêtes HTTP/HTTPS au format JSON.
 
-## Introduction et description du projet
+---
 
-MediTrack est une application web de suivi médical développée en Java utilisant le framework Spring Boot. L'objectif principal de cette application est de permettre la gestion des patients, des médecins, des rendez-vous, des signes vitaux et des alertes médicales. L'application offre une interface utilisateur pour les patients et les médecins, avec des fonctionnalités d'authentification, de gestion des profils et de suivi des données médicales.
+## 4. Code source
+•⁠  ⁠*Organisation et Structure des dossiers :*
+  ⁠ text
+  ├── frontend/
+  │   ├── src/ (components, hooks, pages, services)
+  │   └── package.json
+  ├── backend/
+  │   ├── app/ (routes, models, controllers, utils)
+  │   └── requirements.txt
+  └── docs/
+   ⁠
+•⁠  ⁠*Conventions de nommage :* ⁠ camelCase ⁠ pour les variables/fonctions JavaScript, ⁠ PascalCase ⁠ pour les composants React, ⁠ snake_case ⁠ pour Python.
+•⁠  ⁠*Qualité du code :* Utilisation de ESLint/Prettier pour le front-end et de Flake8 pour le back-end.
+•⁠  ⁠*Stratégie Git :* Utilisation de *Git Flow* (⁠ main ⁠ pour la production, ⁠ develop ⁠ pour l'intégration, et des branches ⁠ feature/nom-fonctionnalite ⁠).
+•⁠  ⁠*Intégration continue (CI) :* Workflows GitHub Actions configurés pour exécuter le linting et les tests à chaque Push/Pull Request.
+•⁠  ⁠*Tests :* * Unitaires : Jest pour React, ⁠ pytest ⁠ pour Flask.
+  * Intégration : Tests des endpoints API avec Postman/Newman.
 
-Le projet a été réalisé dans le cadre d'un travail d'équipe pour démontrer les compétences en développement d'applications web avec Spring Boot, intégration de base de données MySQL et utilisation de templates Thymeleaf pour le frontend.
+---
 
-## Instructions d'installation et d'utilisation
+## 5. Gestion des erreurs et Expérience Utilisateur (UI/UX)
+•⁠  ⁠*Gestion côté client :* Implémentation d'un "Global Error Boundary" en React pour éviter les crashs de l'application.
+•⁠  ⁠*Feedback visuel :* Utilisation de composants "Toast" (ex: React Toastify) pour afficher des messages explicites (succès, avertissements, erreurs HTTP 400/500).
+•⁠  ⁠*États de chargement :* Intégration de "Skeleton Loaders" et de spinners lors des requêtes asynchrones pour indiquer à l'utilisateur qu'une action est en cours.
+•⁠  ⁠*Amélioration de l'accessibilité :* Messages d'erreurs colorimétriques associés à des icônes pour être compréhensibles sans dépendre uniquement de la couleur.
 
-### Prérequis
+---
 
-- Java 17 ou supérieur
-- Maven 3.6+
-- MySQL 8.0+
+## 6. Validation des données
+•⁠  ⁠*Côté Front-end :* Utilisation de ⁠ Yup ⁠ et ⁠ Formik ⁠ pour vérifier la validité des champs (format d'email, longueur des mots de passe, types de fichiers) avant l'envoi de la requête afin de réduire la charge serveur.
+•⁠  ⁠*Côté Back-end :* Validation stricte via Pydantic ou Marshmallow. Aucun input n'est "trusted".
+•⁠  ⁠*Contraintes métier :* Contrôle des tailles maximales de téléversement et des extensions de fichiers autorisées côté serveur pour prévenir le stockage d'exécutables malveillants.
 
-### Installation
+---
 
-1. Clonez le repository :
-   ```bash
-   git clone https://github.com/ENSIAS-MEH/appoo-betateam.git
-   cd appoo-betateam
-   ```
+## 7. Sécurité
+L'application intègre les principes de "Security by Design" :
+•⁠  ⁠*Injections SQL :* Utilisation exclusive de requêtes paramétrées via l'ORM (SQLAlchemy).
+•⁠  ⁠*XSS (Cross-Site Scripting) :* Échappement automatique des données affichées par React et assainissement (sanitization) des entrées côté serveur.
+•⁠  ⁠*CSRF :* Configuration stricte des cookies (attributs ⁠ HttpOnly ⁠, ⁠ Secure ⁠, ⁠ SameSite=Strict ⁠).
+•⁠  ⁠*Authentification et Autorisation :* Implémentation de JWT (JSON Web Tokens) avec des délais d'expiration courts et gestion du rafraîchissement des tokens. Contrôle des accès basé sur les rôles (RBAC).
+•⁠  ⁠*Stockage des mots de passe :* Hachage systématique avec ⁠ bcrypt ⁠ et un "salt" unique par utilisateur.
+•⁠  ⁠*Variables sensibles :* Les secrets d'API et clés de chiffrement ne sont jamais commités et sont gérés via des fichiers ⁠ .env ⁠ ou un gestionnaire de secrets.
 
-2. Démarrez MySQL avec le panneau de contrôle XAMPP :
-   - Ouvrez XAMPP Control Panel
-   - Démarrez le service `MySQL`
-   - Ouvrez `phpMyAdmin` à l'adresse `http://localhost/phpmyadmin` pour vérifier que la base est accessible
+---
 
-3. Configurez la base de données MySQL :
-   - Créez une base de données nommée `meditrack`
-   - Exécutez les scripts SQL dans `src/main/resources/sql/` :
-     - `schema.sql` pour créer les tables
-     - `init-users.sql` pour initialiser les utilisateurs
+## 8. Compatibilité multiplateforme
+•⁠  ⁠*Responsive Design :* Utilisation d'une approche "Mobile-First" avec Tailwind CSS.
+•⁠  ⁠*Tests de compatibilité :* Validation du fonctionnement de l'interface et du téléversement sur :
+  * *Navigateurs :* Chrome, Firefox, Safari, Edge.
+  * *Appareils :* Ordinateurs de bureau (1080p, 4K), tablettes (iPad) et smartphones (iOS, Android).
 
-4. Modifiez la configuration de la base de données dans `src/main/java/com/meditrack/config/DatabaseConnection.java` si nécessaire.
+---
 
-4. Compilez et exécutez l'application :
-   ```bash
-   mvn clean install
-   mvn spring-boot:run
-   ```
+## 9. Documentation
+•⁠  ⁠*Code source :* Les fonctions back-end complexes (algorithmes de versionnement, configuration des ACL Linux) sont documentées via des "Docstrings" standards.
+•⁠  ⁠*Guide de déploiement :* Les instructions détaillées pour installer les dépendances, configurer la base de données et lancer les serveurs sont incluses dans un fichier ⁠ INSTALL.md ⁠ annexe.
+•⁠  ⁠*API Reference :* Génération automatique de la documentation des endpoints REST avec Swagger/OpenAPI.
 
-### Utilisation
+---
 
-1. Ouvrez votre navigateur et allez sur `http://localhost:8080/login`
-2. Connectez-vous avec un compte patient ou médecin
-3. Naviguez dans l'application pour gérer les rendez-vous, consulter les signes vitaux, etc.
+## 10. Accessibilité (A11y)
+•⁠  ⁠*Contrastes :* Respect des ratios de contraste WCAG 2.1 (minimum 4.5:1 pour le texte normal).
+•⁠  ⁠*Navigation clavier :* Tous les éléments interactifs (boutons, formulaires de téléversement) sont atteignables via la touche ⁠ Tab ⁠ avec un indicateur de focus visible (⁠ :focus-visible ⁠).
+•⁠  ⁠*Lecteurs d'écran :* Ajout des balises ARIA (⁠ aria-label ⁠, ⁠ aria-hidden ⁠) pour les icônes et les éléments visuels non textuels.
 
-## Description de l'architecture et des choix de conception
+---
 
-### Architecture générale
+## 11. Gestion de la configuration
+•⁠  ⁠*Variables d'environnement :* Séparation stricte entre les environnements de ⁠ development ⁠, ⁠ testing ⁠, et ⁠ production ⁠.
+•⁠  ⁠*Fichiers de config :* Un fichier ⁠ .env.example ⁠ est fourni dans le dépôt, listant les clés nécessaires sans révéler leurs valeurs réelles.
 
-L'application suit le pattern MVC (Modèle-Vue-Contrôleur) avec Spring Boot :
+---
 
-- **Modèles (Models)** : Classes Java représentant les entités (Patient, Doctor, Appointment, etc.)
-- **Vues (Views)** : Templates Thymeleaf pour l'interface utilisateur
-- **Contrôleurs (Controllers)** : Gestion des requêtes HTTP et logique de présentation
-
-### Choix technologiques
-
-- **Spring Boot** : Framework pour simplifier le développement d'applications Java
-- **Thymeleaf** : Moteur de templates pour le rendu côté serveur
-- **MySQL** : Base de données relationnelle
-- **jBCrypt** : Pour le hachage des mots de passe
-- **JUnit** : Pour les tests unitaires
-
-### Structure des packages
-
-- `controllers/` : Contrôleurs web
-- `models/` : Classes de modèle
-- `dao/` : Couche d'accès aux données
-- `config/` : Configuration de l'application
-- `utils/` : Utilitaires (hachage des mots de passe)
-
-## Difficultés rencontrées et solutions apportées
-
-### Difficulté 1 : Résolution des imports JUnit
-
-**Problème** : Les imports `org.junit` ne pouvaient pas être résolus dans les classes de test.
-
-**Solution** : Nous avons déplacé les classes de test de `src/main/java` vers `src/test/java` et ajouté la dépendance JUnit Jupiter dans le `pom.xml` avec le scope `test`.
-
-### Difficulté 2 : Gestion des sessions utilisateur
-
-**Problème** : Implémentation de l'authentification et de la gestion des rôles (patient/médecin).
-
-**Solution** : Utilisation des sessions HTTP de Spring Boot avec vérification des rôles dans les contrôleurs.
-
-### Difficulté 3 : Intégration base de données
-
-**Problème** : Configuration de la connexion MySQL et exécution des scripts SQL.
-
-**Solution** : Création d'une classe `DatabaseConnection` pour gérer la connexion et organisation des scripts SQL dans `resources/sql/`.
-
-## Conclusion
-
-Le projet MediTrack a permis de développer une application web complète de suivi médical en utilisant les technologies modernes du développement Java. Malgré quelques difficultés techniques, l'équipe a réussi à implémenter toutes les fonctionnalités requises avec une architecture propre et maintenable.
-
-Les points forts du projet incluent :
-- Utilisation efficace de Spring Boot pour le développement rapide
-- Séparation claire des responsabilités (MVC)
-- Sécurité avec hachage des mots de passe
-- Tests unitaires pour valider la logique métier
-
-Ce projet démontre les compétences acquises en développement d'applications web Java et prépare à des projets plus complexes dans le domaine de la santé numérique.
+## 12. Démo vidéo de l'application
+(https://drive.google.com/drive/folders/1xvujw5q4sMhMrbKQQWIZLNgecKkxbLdN?usp=sharing)
