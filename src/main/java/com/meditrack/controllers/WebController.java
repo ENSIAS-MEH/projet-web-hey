@@ -2,6 +2,7 @@ package com.meditrack.controllers;
 
 import com.meditrack.dao.*;
 import com.meditrack.models.*;
+import com.meditrack.utils.LoginAttemptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
