@@ -1,0 +1,24 @@
+@startuml
+start
+:L'utilisateur saisit Email et Mot de passe;
+:Recherche de l'utilisateur par Email (UserDAO);
+
+if (Utilisateur trouvé?) then (Oui)
+    :Récupérer le Hash BCrypt;
+    :Comparer Mot de passe saisi avec Hash (BCrypt.checkpw);
+    
+    if (Correspondance exacte ?) then (Oui)
+        if (Rôle == "PATIENT" ?) then (Oui)
+            :Rediriger vers le Tableau de Bord Patient;
+        else (Non, c'est un Médecin)
+            :Rediriger vers le Tableau de Bord Médecin;
+        endif
+    else (Non)
+        :Afficher "Identifiants incorrects";
+    endif
+else (Non)
+    :Afficher "Identifiants incorrects";
+endif
+
+stop
+@enduml

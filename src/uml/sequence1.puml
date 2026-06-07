@@ -1,0 +1,37 @@
+@startuml
+actor Patient as P
+boundary "Interface Utilisateur" as UI
+control "VitalsController" as Ctrl
+entity "Vitals" as V
+database "VitalsDAO" as DAO
+database "AlertDAO" as DAOAlert
+
+P -> UI: Saisit tension, poids, glycémie
+activate UI
+
+UI -> Ctrl: enregistrerConstantes(patientId, tension, poids, glycemie)
+activate Ctrl
+
+Ctrl -> V: new Vitals(...)
+activate V
+V --> Ctrl: vitalsObj
+deactivate V
+
+Ctrl -> DAO: save(vitalsObj)
+activate DAO
+DAO --> Ctrl: success
+deactivate DAO
+
+opt Glycémie > Seuil Critique (Ex: 1.26 g/L)
+    Ctrl -> DAOAlert: createAlert(doctorId, "Glycémie élevée pour patient X")
+    activate DAOAlert
+    DAOAlert --> Ctrl: alertCreated
+    deactivate DAOAlert
+end
+
+Ctrl --> UI: Message de confirmation
+deactivate Ctrl
+
+UI --> P: Affiche "Données enregistrées avec succès"
+deactivate UI
+@enduml

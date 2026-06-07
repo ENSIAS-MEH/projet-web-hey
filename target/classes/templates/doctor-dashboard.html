@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediTrack — Espace Médecin</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --navy: #0d1b2a;
+        --navy-mid: #1a2e45;
+        --navy-light: #243b55;
+        --teal: #0fbcb0;
+        --teal-glow: rgba(15, 188, 176, 0.18);
+        --red: #ff4d6d;
+        --red-glow: rgba(255, 77, 109, 0.15);
+        --amber: #f4a261;
+        --green: #2dc653;
+        --white: #f0f4f8;
+        --muted: #8399b0;
+        --card-bg: rgba(26, 46, 69, 0.7);
+        --border: rgba(255, 255, 255, 0.07);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--navy);
+        color: var(--white);
+        min-height: 100vh;
+        display: flex;
+        overflow-x: hidden;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 60% 50% at 80% 10%,
+            rgba(15, 188, 176, 0.08) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 10% 80%,
+            rgba(255, 77, 109, 0.06) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ─── SIDEBAR ─── */
+      .sidebar {
+        width: 240px;
+        min-height: 100vh;
+        background: linear-gradient(
+          180deg,
+          var(--navy-mid) 0%,
+          var(--navy) 100%
+        );
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        padding-bottom: 24px;
+      }
+      .sidebar-logo {
+        padding: 28px 24px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar-logo .logo-icon {
+        font-size: 28px;
+      }
+      .sidebar-logo .logo-name {
+        font-family: "Syne", sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+      .sidebar-logo .logo-sub {
+        font-size: 11px;
+        color: var(--teal);
+        font-weight: 500;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+      .sidebar-nav {
+        flex: 1;
+        padding: 20px 12px;
+      }
+      .nav-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        padding: 0 12px;
+        margin: 16px 0 8px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-bottom: 2px;
+      }
+      .nav-item:hover {
+        background: var(--border);
+        color: var(--white);
+      }
+      .nav-item.active {
+        background: var(--teal-glow);
+        color: var(--teal);
+        border: 1px solid rgba(15, 188, 176, 0.25);
+      }
+      .nav-badge {
+        margin-left: auto;
+        background: var(--red);
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 20px;
+        animation: pulse-badge 2s infinite;
+      }
+      @keyframes pulse-badge {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(255, 77, 109, 0);
+        }
+      }
+      .sidebar-footer {
+        padding: 16px 16px 0;
+        border-top: 1px solid var(--border);
+      }
+      .doctor-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+      }
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--teal), #0e8c83);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+      }
+      .doc-name {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .doc-role {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border-radius: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-top: 8px;
+      }
+      .logout-btn:hover {
+        background: var(--red-glow);
+        color: var(--red);
+      }
+
+      /* ─── MAIN ─── */
+      .main {
+        margin-left: 240px;
+        flex: 1;
+        padding: 32px 32px 40px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+      .topbar h1 {
+        font-family: "Syne", sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+      }
+      .topbar .sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .time-chip {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* ─── STATS ─── */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .stat {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px 20px;
+        backdrop-filter: blur(12px);
+        animation: fadeUp 0.5s ease both;
+      }
+      .stat:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .stat:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .stat:nth-child(3) {
+        animation-delay: 0.15s;
+      }
+      .stat:nth-child(4) {
+        animation-delay: 0.2s;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .stat-lbl {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 500;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+      }
+      .stat-val {
+        font-family: "Syne", sans-serif;
+        font-size: 32px;
+        font-weight: 800;
+        margin: 6px 0 2px;
+      }
+      .stat-hint {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .c-red .stat-val {
+        color: var(--red);
+      }
+      .c-amber .stat-val {
+        color: var(--amber);
+      }
+      .c-green .stat-val {
+        color: var(--green);
+      }
+      .c-teal .stat-val {
+        color: var(--teal);
+      }
+
+      /* ─── GRID ─── */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      /* ─── CARD ─── */
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px 24px;
+        backdrop-filter: blur(12px);
+        animation: fadeUp 0.5s ease both;
+      }
+      .card:nth-child(1) {
+        animation-delay: 0.25s;
+      }
+      .card:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+      .card-title {
+        font-family: "Syne", sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .d-red {
+        background: var(--red);
+        box-shadow: 0 0 8px var(--red);
+      }
+      .d-teal {
+        background: var(--teal);
+        box-shadow: 0 0 8px var(--teal);
+      }
+      .chip {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+      }
+      .chip-red {
+        background: var(--red-glow);
+        color: var(--red);
+      }
+      .chip-teal {
+        background: var(--teal-glow);
+        color: var(--teal);
+      }
+
+      /* ─── ALERTES ─── */
+      .alert-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .alert-row {
+        background: var(--red-glow);
+        border: 1px solid rgba(255, 77, 109, 0.2);
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        animation: slideIn 0.4s ease both;
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .alert-ico {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .alert-body {
+        flex: 1;
+      }
+      .alert-time {
+        font-size: 11px;
+        color: var(--red);
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .alert-msg {
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .btn-vu {
+        background: transparent;
+        border: 1px solid rgba(255, 77, 109, 0.35);
+        color: var(--red);
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+        flex-shrink: 0;
+      }
+      .btn-vu:hover {
+        background: var(--red);
+        color: white;
+      }
+
+      /* ─── TABLE PLANNING ─── */
+      .rdv-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .rdv-table th {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      .rdv-table td {
+        padding: 12px;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      .rdv-table tr:last-child td {
+        border-bottom: none;
+      }
+      .rdv-table tr:hover td {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .p-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .p-av {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4361ee, #7209b7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      /* badges */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .badge::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .b-plan {
+        background: rgba(244, 162, 97, 0.15);
+        color: var(--amber);
+      }
+      .b-conf {
+        background: rgba(45, 198, 83, 0.15);
+        color: var(--green);
+      }
+      .b-ann {
+        background: rgba(255, 77, 109, 0.15);
+        color: var(--red);
+      }
+      .b-term {
+        background: rgba(15, 188, 176, 0.15);
+        color: var(--teal);
+      }
+
+      /* actions */
+      .actions {
+        display: flex;
+        gap: 5px;
+      }
+      .btn-a {
+        border: none;
+        border-radius: 7px;
+        padding: 5px 9px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-conf {
+        background: rgba(45, 198, 83, 0.15);
+        color: var(--green);
+        border: 1px solid rgba(45, 198, 83, 0.25);
+      }
+      .btn-conf:hover {
+        background: var(--green);
+        color: white;
+      }
+      .btn-done {
+        background: rgba(15, 188, 176, 0.12);
+        color: var(--teal);
+        border: 1px solid rgba(15, 188, 176, 0.25);
+      }
+      .btn-done:hover {
+        background: var(--teal);
+        color: white;
+      }
+      .btn-ann {
+        background: rgba(255, 77, 109, 0.12);
+        color: var(--red);
+        border: 1px solid rgba(255, 77, 109, 0.25);
+      }
+      .btn-ann:hover {
+        background: var(--red);
+        color: white;
+      }
+
+      /* scrollable area */
+      .scroll {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scroll::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+      }
+
+      /* empty */
+      .empty {
+        text-align: center;
+        padding: 36px 20px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .empty .ei {
+        font-size: 36px;
+        margin-bottom: 10px;
+      }
+
+      @media (max-width: 1100px) {
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🩺</div>
+        <div class="logo-name">MediTrack</div>
+        <div class="logo-sub">Espace Médecin</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-label">Navigation</div>
+        <a class="nav-item active" href="/doctor/dashboard">
+          <span>📊</span> Tableau de bord
+        </a>
+        <div class="nav-label">Gestion</div>
+        <a class="nav-item" href="/doctor/dashboard">
+          <span>⚠️</span> Alertes
+          <span class="nav-badge" id="alertBadge">0</span>
+        </a>
+        <a class="nav-item" href="/doctor/dashboard">
+          <span>📅</span> Planning
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="doctor-profile">
+          <div
+            class="avatar"
+            th:text="${doctorConnecte != null ? doctorConnecte.prenom.substring(0,1).toUpperCase() + doctorConnecte.nom.substring(0,1).toUpperCase() : 'DR'}"
+          ></div>
+          <div>
+            <div
+              class="doc-name"
+              th:text="${doctorConnecte != null ? 'Dr. ' + doctorConnecte.prenom + ' ' + doctorConnecte.nom : ''}"
+            ></div>
+            <div
+              class="doc-role"
+              th:text="${doctorConnecte != null ? doctorConnecte.specialite : ''}"
+            ></div>
+          </div>
+        </div>
+        <a href="/logout" class="logout-btn">🔓 Déconnexion</a>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div>
+          <h1>Bonjour, Docteur 👋</h1>
+          <div class="sub" id="dateStr">…</div>
+        </div>
+        <div class="time-chip" id="timeStr">--:--</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat c-red">
+          <div class="stat-lbl">Alertes non lues</div>
+          <div
+            class="stat-val"
+            id="statAlerts"
+            th:text="${#lists.size(alertes)}"
+          >
+            0
+          </div>
+          <div class="stat-hint">À traiter</div>
+        </div>
+        <div class="stat c-amber">
+          <div class="stat-lbl">Planifiés</div>
+          <div
+            class="stat-val"
+            th:text="${#lists.size(mesRdv.?[statut == 'PLANIFIE'])}"
+          >
+            0
+          </div>
+          <div class="stat-hint">En attente</div>
+        </div>
+        <div class="stat c-green">
+          <div class="stat-lbl">Confirmés</div>
+          <div
+            class="stat-val"
+            th:text="${#lists.size(mesRdv.?[statut == 'CONFIRME'])}"
+          >
+            0
+          </div>
+          <div class="stat-hint">À venir</div>
+        </div>
+        <div class="stat c-teal">
+          <div class="stat-lbl">Total RDV</div>
+          <div class="stat-val" th:text="${#lists.size(mesRdv)}">0</div>
+          <div class="stat-hint">Tous statuts</div>
+        </div>
+      </div>
+
+      <!-- Grid : Alertes + Planning côte à côte -->
+      <div class="grid">
+        <!-- ── ALERTES ── -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <span class="dot d-red"></span> Alertes Patients
+            </div>
+            <span
+              class="chip chip-red"
+              th:text="${#lists.size(alertes)} + ' alerte(s)'"
+            ></span>
+          </div>
+
+          <div th:if="${#lists.isEmpty(alertes)}" class="empty">
+            <div class="ei">✅</div>
+            Aucune alerte active.<br />
+            <span style="font-size: 12px"
+              >Tous les patients ont des constantes normales.</span
+            >
+          </div>
+
+          <div
+            th:if="${alertes == null or #lists.isEmpty(alertes)}"
+            class="empty"
+          >
+            <div class="ei">✅</div>
+            Aucune alerte active.<br />
+            <span style="font-size: 12px"
+              >Tous les patients ont des constantes normales.</span
+            >
+          </div>
+
+          <div
+            th:if="${alertes != null and !#lists.isEmpty(alertes)}"
+            class="alert-list scroll"
+          >
+            <div th:each="alerte : ${alertes}" class="alert-row">
+              <span class="alert-ico">🚨</span>
+              <div class="alert-body">
+                <div
+                  class="alert-time"
+                  th:text="${#dates.format(alerte.dateCreation,'dd/MM/yyyy à HH:mm')}"
+                ></div>
+                <div class="alert-msg" th:text="${alerte.message}"></div>
+              </div>
+              <form
+                action="/doctor/alerts/read"
+                method="post"
+                style="margin: 0"
+              >
+                <input type="hidden" name="alertId" th:value="${alerte.id}" />
+                <button type="submit" class="btn-vu">✔ Vu</button>
+              </form>
+              s
+            </div>
+          </div>
+        </div>
+
+        <!-- ── PLANNING ── -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <span class="dot d-teal"></span> Mon Planning
+            </div>
+            <span
+              class="chip chip-teal"
+              th:text="${#lists.size(mesRdv)} + ' RDV'"
+            ></span>
+          </div>
+
+          <div th:if="${#lists.isEmpty(mesRdv)}" class="empty">
+            <div class="ei">📅</div>
+            Aucun rendez-vous à venir.
+          </div>
+
+          <div th:if="${!#lists.isEmpty(mesRdv)}" class="scroll">
+            <table class="rdv-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Patient</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="rdv : ${mesRdv}">
+                  <td>
+                    <div
+                      style="font-weight: 600"
+                      th:text="${#dates.format(rdv.dateHeure,'dd MMM yyyy')}"
+                    ></div>
+                    <div
+                      style="font-size: 11px; color: var(--muted)"
+                      th:text="${#dates.format(rdv.dateHeure,'HH:mm')}"
+                    ></div>
+                  </td>
+                  <td>
+                    <div class="p-chip">
+                      <div
+                        class="p-av"
+                        th:text="${rdv.patientPrenom != null ? rdv.patientPrenom.substring(0,1).toUpperCase() : 'P'}"
+                      ></div>
+                      <span
+                        th:text="${rdv.patientPrenom} + ' ' + ${rdv.patientNom}"
+                      ></span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge b-plan" th:if="${rdv.statut=='PLANIFIE'}"
+                      >PLANIFIÉ</span
+                    >
+                    <span class="badge b-conf" th:if="${rdv.statut=='CONFIRME'}"
+                      >CONFIRMÉ</span
+                    >
+                    <span class="badge b-ann" th:if="${rdv.statut=='ANNULE'}"
+                      >ANNULÉ</span
+                    >
+                    <span class="badge b-term" th:if="${rdv.statut=='TERMINE'}"
+                      >TERMINÉ</span
+                    >
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <form
+                        th:if="${rdv.statut=='PLANIFIE'}"
+                        action="/doctor/appointments/update"
+                        method="post"
+                      >
+                        <input
+                          type="hidden"
+                          name="appointmentId"
+                          th:value="${rdv.id}"
+                        />
+                        <input type="hidden" name="statut" value="CONFIRME" />
+                        <button class="btn-a btn-conf" title="Confirmer">
+                          ✔
+                        </button>
+                      </form>
+                      <form
+                        th:if="${rdv.statut=='CONFIRME'}"
+                        action="/doctor/appointments/update"
+                        method="post"
+                      >
+                        <input
+                          type="hidden"
+                          name="appointmentId"
+                          th:value="${rdv.id}"
+                        />
+                        <input type="hidden" name="statut" value="TERMINE" />
+                        <button class="btn-a btn-done" title="Terminer">
+                          ✅
+                        </button>
+                      </form>
+                      <form
+                        th:if="${rdv.statut=='PLANIFIE' or rdv.statut=='CONFIRME'}"
+                        action="/doctor/appointments/update"
+                        method="post"
+                      >
+                        <input
+                          type="hidden"
+                          name="appointmentId"
+                          th:value="${rdv.id}"
+                        />
+                        <input type="hidden" name="statut" value="ANNULE" />
+                        <button class="btn-a btn-ann" title="Annuler">✖</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- /grid -->
+    </main>
+
+    <script>
+      // Horloge en temps réel
+      const days = [
+        "Dimanche",
+        "Lundi",
+        "Mardi",
+        "Mercredi",
+        "Jeudi",
+        "Vendredi",
+        "Samedi",
+      ];
+      const months = [
+        "janvier",
+        "février",
+        "mars",
+        "avril",
+        "mai",
+        "juin",
+        "juillet",
+        "août",
+        "septembre",
+        "octobre",
+        "novembre",
+        "décembre",
+      ];
+      function tick() {
+        const n = new Date();
+        document.getElementById("dateStr").textContent =
+          days[n.getDay()] +
+          " " +
+          n.getDate() +
+          " " +
+          months[n.getMonth()] +
+          " " +
+          n.getFullYear();
+        document.getElementById("timeStr").textContent =
+          String(n.getHours()).padStart(2, "0") +
+          ":" +
+          String(n.getMinutes()).padStart(2, "0");
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      // Sync badge sidebar avec le compteur d'alertes
+      const v =
+        parseInt(document.getElementById("statAlerts")?.textContent) || 0;
+      const badge = document.getElementById("alertBadge");
+      badge.textContent = v;
+      if (v === 0) badge.style.display = "none";
+    </script>
+  </body>
+</html>

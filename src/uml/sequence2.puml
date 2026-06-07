@@ -1,0 +1,31 @@
+@startuml
+actor Patient as P
+boundary "Interface Utilisateur" as UI
+control "AppointmentController" as Ctrl
+database "AppointmentDAO" as DAO
+
+P -> UI: Sélectionne un médecin et une date/heure
+activate UI
+
+UI -> Ctrl: reserverCreneau(patientId, doctorId, dateHeure)
+activate Ctrl
+
+Ctrl -> DAO: checkDisponibilite(doctorId, dateHeure)
+activate DAO
+DAO --> Ctrl: isAvailable (true)
+deactivate DAO
+
+alt Créneau disponible
+    Ctrl -> DAO: saveAppointment(patientId, doctorId, dateHeure, "PLANIFIE")
+    activate DAO
+    DAO --> Ctrl: success
+    deactivate DAO
+    Ctrl --> UI: Réservation confirmée
+else Créneau indisponible
+    Ctrl --> UI: Erreur Créneau déjà pris
+end
+
+UI --> P: Affichage du résultat de la réservation
+deactivate Ctrl
+deactivate UI
+@enduml
